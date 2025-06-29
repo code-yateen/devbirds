@@ -7,7 +7,7 @@ const Plan = require('../models/Plan');
 // @desc    Submit feedback
 // @route   POST /api/feedback
 // @access  Private (Member only)
-router.post('/', protect, authorize('member'), async (req, res) => {
+router.post('/', protect, authorize('Member'), async (req, res) => {
     try {
         // Check if plan exists and belongs to member
         const plan = await Plan.findOne({
@@ -55,7 +55,7 @@ router.post('/', protect, authorize('member'), async (req, res) => {
 // @desc    Get feedback for a plan
 // @route   GET /api/feedback/plan/:planId
 // @access  Private (Trainer only)
-router.get('/plan/:planId', protect, authorize('trainer'), async (req, res) => {
+router.get('/plan/:planId', protect, authorize('Trainer'), async (req, res) => {
     try {
         const plan = await Plan.findById(req.params.planId);
 
@@ -92,7 +92,7 @@ router.get('/plan/:planId', protect, authorize('trainer'), async (req, res) => {
 // @desc    Get all feedback for a trainer
 // @route   GET /api/feedback/trainer
 // @access  Private (Trainer only)
-router.get('/trainer', protect, authorize('trainer'), async (req, res) => {
+router.get('/trainer', protect, authorize('Trainer'), async (req, res) => {
     try {
         const plans = await Plan.find({ trainer: req.user.id });
         const planIds = plans.map(plan => plan._id);
@@ -111,6 +111,35 @@ router.get('/trainer', protect, authorize('trainer'), async (req, res) => {
             success: false,
             error: err.message
         });
+    }
+});
+
+// POST /api/feedback
+router.post('/', protect, async (req, res) => {
+    try {
+        const { name, email, subject, message, rating } = req.body;
+        const feedback = new Feedback({
+            name,
+            email,
+            subject,
+            message,
+            rating,
+            approved: false
+        });
+        await feedback.save();
+        res.status(201).json({ success: true, feedback });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/feedback/testimonials
+router.get('/testimonials', async (req, res) => {
+    try {
+        const testimonials = await Feedback.find({ approved: true });
+        res.json({ success: true, testimonials });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 

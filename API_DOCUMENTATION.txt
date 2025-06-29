@@ -1,0 +1,271 @@
+FITNESS APP API DOCUMENTATION
+============================
+
+BASE URL: /api
+
+AUTHENTICATION
+--------------
+All protected routes require a Clerk JWT token in the Authorization header:
+Authorization: Bearer <token>
+
+USER PROFILE ROUTES
+-------------------
+1. Get Current User Profile
+   GET /users/me
+   Auth: Required (Clerk JWT)
+   Response: User profile data
+
+2. Create/Update User Profile
+   POST /users/profile
+   Auth: Required (Clerk JWT)
+   Body:
+   {
+     "name": "String",
+     "age": "Number",
+     "height": "Number",
+     "weight": "Number",
+     "fitnessGoal": "String (bulk, cut, maintain)",
+     "dietPreference": "String (vegetarian, nonVegetarian, eggetarian)",
+     "allergies": "String",
+     "lifestyle": "String (sedentary, lightlyActive, active, veryActive, extraActive)",
+     "budget": "String (low, medium, high)"
+   }
+
+USER PROGRESS ROUTES
+--------------------
+1. Get Progress Entries
+   GET /users/progress
+   Auth: Required (Clerk JWT)
+   Response: Array of progress entries
+
+2. Add Progress Entry
+   POST /users/progress
+   Auth: Required (Clerk JWT)
+   Body:
+   {
+     "weight": "Number",
+     "dateRecorded": "Date",
+     "measurements": {
+       "chest": "Number",
+       "waist": "Number",
+       "hips": "Number",
+       "arms": "Number",
+       "legs": "Number"
+     },
+     "notes": "String"
+   }
+
+WORKOUT PLAN ROUTES
+-------------------
+1. Get Current Workout Plan
+   GET /workouts
+   Auth: Required (Clerk JWT)
+   Query: goal (optional)
+   Response: Workout plan data
+
+2. Generate New Workout Plan
+   POST /workouts/generate
+   Auth: Required (Clerk JWT)
+   Body:
+   {
+     "fitnessGoal": "String (bulk, cut, maintain)",
+     "lifestyle": "String",
+     "experience": "String (optional)",
+     "preferences": "Object (optional)"
+   }
+
+3. Update Workout Plan
+   PUT /workouts/:workoutId
+   Auth: Required (Clerk JWT)
+   Body: Updated workout data
+
+4. Get Workout History
+   GET /workouts/history
+   Auth: Required (Clerk JWT)
+   Response: Array of previous workouts
+
+EXERCISE TRACKING ROUTES
+------------------------
+1. Log Exercise Completion
+   POST /workouts/log
+   Auth: Required (Clerk JWT)
+   Body:
+   {
+     "workoutDayId": "String",
+     "date": "Date",
+     "completedExercises": [
+       {
+         "exerciseId": "String",
+         "sets": "Number",
+         "reps": "String/Number",
+         "weight": "Number (optional)",
+         "completed": "Boolean"
+       }
+     ]
+   }
+
+2. Get Workout Logs for Date
+   GET /workouts/log/:date
+   Auth: Required (Clerk JWT)
+   Response: Workout log data
+
+DIET PLAN ROUTES
+----------------
+1. Get Current Diet Plan
+   GET /diets
+   Auth: Required (Clerk JWT)
+   Query: goal, preference (optional)
+   Response: Diet plan data
+
+2. Generate New Diet Plan
+   POST /diets/generate
+   Auth: Required (Clerk JWT)
+   Body:
+   {
+     "fitnessGoal": "String (bulk, cut, maintain)",
+     "dietPreference": "String (vegetarian, nonVegetarian, eggetarian)",
+     "allergies": "String",
+     "budget": "String (low, medium, high)"
+   }
+
+3. Update Diet Plan
+   PUT /diets/:dietPlanId
+   Auth: Required (Clerk JWT)
+   Body: Updated diet plan data
+
+MEAL TRACKING ROUTES
+--------------------
+1. Log Meals
+   POST /diets/log
+   Auth: Required (Clerk JWT)
+   Body:
+   {
+     "date": "Date",
+     "meals": [
+       {
+         "mealType": "String (breakfast, lunch, dinner, etc.)",
+         "foods": ["String"],
+         "calories": "Number (optional)",
+         "macros": {
+           "protein": "Number",
+           "carbs": "Number",
+           "fats": "Number"
+         }
+       }
+     ]
+   }
+
+2. Get Meal Logs for Date
+   GET /diets/log/:date
+   Auth: Required (Clerk JWT)
+   Response: Meal log data
+
+TRAINER ROUTES
+--------------
+1. Get All Trainers
+   GET /trainers
+   Auth: None
+   Response: Array of trainer profiles
+
+2. Get Trainer Details
+   GET /trainers/:trainerId
+   Auth: None
+   Response: Trainer profile data
+
+3. Contact Trainer
+   POST /trainers/contact
+   Auth: Required (Clerk JWT)
+   Body:
+   {
+     "trainerId": "String",
+     "message": "String",
+     "contactPreference": "String (email, phone, in-app)"
+   }
+
+FITNESS PLAN (SUBSCRIPTION) ROUTES
+----------------------------------
+1. Get All Plans
+   GET /plans
+   Auth: None
+   Response: Array of plan data
+
+2. Subscribe to Plan
+   POST /plans/subscribe
+   Auth: Required (Clerk JWT)
+   Body:
+   {
+     "planId": "String",
+     "paymentMethod": "String",
+     "couponCode": "String (optional)"
+   }
+
+3. Get My Plan
+   GET /plans/my-plan
+   Auth: Required (Clerk JWT)
+   Response: Plan subscription data
+
+FEEDBACK ROUTES
+---------------
+1. Submit Feedback
+   POST /feedback
+   Auth: Required (Clerk JWT)
+   Body:
+   {
+     "name": "String",
+     "email": "String",
+     "subject": "String",
+     "message": "String",
+     "rating": "Number (1-5)"
+   }
+
+2. Get Approved Testimonials
+   GET /feedback/testimonials
+   Auth: None
+   Response: Array of testimonials
+
+ANALYTICS ROUTES
+----------------
+1. Get Workout Analytics
+   GET /analytics/workouts
+   Auth: Required (Clerk JWT)
+   Query: period (week, month, year)
+   Response: Workout statistics and analytics
+
+2. Get Nutrition Analytics
+   GET /analytics/nutrition
+   Auth: Required (Clerk JWT)
+   Query: period (week, month, year)
+   Response: Nutrition statistics and analytics
+
+ADMIN ROUTES
+------------
+1. Get All Users
+   GET /admin/users
+   Auth: Required (Clerk JWT with admin role)
+   Response: Array of user data
+
+2. Get All Feedback Submissions
+   GET /admin/feedback
+   Auth: Required (Clerk JWT with admin role)
+   Response: Array of feedback submissions
+
+RESPONSE FORMATS
+----------------
+1. Success Response
+   {
+     "success": true,
+     "data": { ... }
+   }
+
+2. Error Response
+   {
+     "success": false,
+     "error": "Error message"
+   }
+
+NOTES
+-----
+- All protected routes require a valid Clerk JWT token.
+- All dates are handled in ISO 8601 format.
+- Role-based access (e.g., admin) is enforced via Clerk JWT claims.
+- All endpoints return JSON responses. 

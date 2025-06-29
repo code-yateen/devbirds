@@ -1,41 +1,51 @@
 const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
 const dotenv = require('dotenv');
+const connectDB = require('./config/db');
+const cors = require('cors');
 
-// Load environment variables
+// Load env vars
 dotenv.config();
 
-// Create Express app
+// Connect to database
+connectDB();
+
 const app = express();
 
-// Middleware
-app.use(cors());
+// Body parser
 app.use(express.json());
 
-// Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/devbirds', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch((err) => console.error('MongoDB connection error:', err));
+// Enable CORS
+app.use(cors());
 
-// Routes
+// Mount routers
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/plans', require('./routes/plans'));
 app.use('/api/feedback', require('./routes/feedback'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/workouts', require('./routes/workouts'));
+app.use('/api/diets', require('./routes/diets'));
+app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/admin', require('./routes/admin'));
 
-// Error handling middleware
+// Error handler
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({
         success: false,
-        error: err.message || 'Server Error'
+        error: 'Server Error'
+    });
+});
+
+// Handle 404
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        error: 'Route not found'
     });
 });
 
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 }); 

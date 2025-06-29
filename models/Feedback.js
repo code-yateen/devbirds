@@ -1,26 +1,30 @@
 const mongoose = require('mongoose');
 
 const feedbackSchema = new mongoose.Schema({
-    member: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    plan: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Plan',
-        required: true
-    },
+    // For testimonials
+    name: String,
+    email: String,
+    subject: String,
+    message: String,
     rating: {
         type: Number,
-        required: [true, 'Please add a rating'],
         min: 1,
         max: 5
     },
-    comment: {
-        type: String,
-        required: [true, 'Please add a comment']
+    approved: {
+        type: Boolean,
+        default: false
     },
+    // For plan feedbacks
+    member: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Member'
+    },
+    plan: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Plan'
+    },
+    comment: String,
     createdAt: {
         type: Date,
         default: Date.now

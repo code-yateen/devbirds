@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -8,56 +6,42 @@ const userSchema = new mongoose.Schema({
         required: [true, 'Please add a name'],
         trim: true
     },
-    email: {
-        type: String,
-        required: [true, 'Please add an email'],
-        unique: true,
-        match: [
-            /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-            'Please add a valid email'
-        ]
+    age: {
+        type: Number,
+        required: [true, 'Please add age']
     },
-    password: {
-        type: String,
-        required: [true, 'Please add a password'],
-        minlength: 6,
-        select: false
+    height: {
+        type: Number,
+        required: [true, 'Please add height']
     },
-    role: {
-        type: String,
-        enum: ['member', 'trainer'],
-        default: 'member'
+    weight: {
+        type: Number,
+        required: [true, 'Please add weight']
     },
-    createdAt: {
-        type: Date,
-        default: Date.now
+    fitnessGoal: {
+        type: String,
+        enum: ['bulk', 'cut', 'maintain'],
+        required: [true, 'Please specify fitness goal']
+    },
+    dietPreference: {
+        type: String,
+        enum: ['vegetarian', 'nonVegetarian', 'eggetarian'],
+        required: [true, 'Please specify diet preference']
+    },
+    allergies: {
+        type: String,
+        default: ''
+    },
+    lifestyle: {
+        type: String,
+        enum: ['sedentary', 'lightlyActive', 'active', 'veryActive', 'extraActive'],
+        required: [true, 'Please specify lifestyle']
+    },
+    budget: {
+        type: String,
+        enum: ['low', 'medium', 'high'],
+        required: [true, 'Please specify budget']
     }
 });
-
-// Encrypt password using bcrypt
-userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) {
-        next();
-    }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-});
-
-// Sign JWT and return
-userSchema.methods.getSignedJwtToken = function() {
-    return jwt.sign(
-        { id: this._id, role: this.role },
-        process.env.JWT_SECRET,
-        { 
-            expiresIn: process.env.JWT_EXPIRE,
-            algorithm: 'HS256'
-        }
-    );
-};
-
-// Match user entered password to hashed password in database
-userSchema.methods.matchPassword = async function(enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
-};
 
 module.exports = mongoose.model('User', userSchema); 

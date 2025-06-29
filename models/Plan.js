@@ -17,12 +17,12 @@ const planSchema = new mongoose.Schema({
     },
     trainer: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'Trainer',
         required: true
     },
     member: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'Member',
         required: true
     },
     content: {

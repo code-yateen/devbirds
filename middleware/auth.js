@@ -1,73 +1,53 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const { isBlacklisted } = require('./tokenBlacklist');
+const { ClerkExpressRequireAuth, ClerkExpressWithAuth } = require('@clerk/clerk-sdk-node');
+const Trainer = require('../models/Trainer');
+const Member = require('../models/Member');
 
-// Protect routes
+// Protect routes using Clerk
 exports.protect = async (req, res, next) => {
-    let token;
-
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        token = req.headers.authorization.split(' ')[1];
-    }
-
-    if (!token) {
-        return res.status(401).json({
-            success: false,
-            error: 'Not authorized to access this route'
-        });
-    }
-
-    try {
-        // Check if token is blacklisted
-        if (isBlacklisted(token)) {
+    // Use Clerk's middleware to attach auth info
+    ClerkExpressWithAuth()(req, res, async (err) => {
+        if (err || !req.auth || !req.auth.userId) {
             return res.status(401).json({
                 success: false,
-                error: 'Token has been invalidated'
+                error: 'Not authorized to access this route (Clerk)'
             });
         }
-
-        // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
-        // Check if token is expired
-        if (decoded.exp < Date.now() / 1000) {
+        try {
+            // Clerk user info is available in req.auth
+            // You may want to fetch more user info from Clerk if needed
+            // For now, we use email from Clerk claims to find Trainer/Member
+            const email = req.auth.sessionClaims?.email || req.auth.claims?.email_address;
+            let user = await Trainer.findOne({ email });
+            let userType = 'Trainer';
+            if (!user) {
+                user = await Member.findOne({ email });
+                userType = user ? 'Member' : null;
+            }
+            if (!user) {
+                return res.status(401).json({
+                    success: false,
+                    error: 'User not found in local database'
+                });
+            }
+            req.user = user;
+            req.user.userType = userType;
+            next();
+        } catch (err) {
             return res.status(401).json({
                 success: false,
-                error: 'Token has expired'
+                error: 'Not authorized to access this route (Clerk error)'
             });
         }
-
-        req.user = await User.findById(decoded.id);
-        
-        if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                error: 'User no longer exists'
-            });
-        }
-
-        next();
-    } catch (err) {
-        if (err.name === 'TokenExpiredError') {
-            return res.status(401).json({
-                success: false,
-                error: 'Token has expired'
-            });
-        }
-        return res.status(401).json({
-            success: false,
-            error: 'Not authorized to access this route'
-        });
-    }
+    });
 };
 
-// Grant access to specific roles
-exports.authorize = (...roles) => {
+// Grant access to specific user types
+exports.authorize = (...userTypes) => {
     return (req, res, next) => {
-        if (!roles.includes(req.user.role)) {
+        if (!userTypes.includes(req.user.userType)) {
             return res.status(403).json({
                 success: false,
-                error: `User role ${req.user.role} is not authorized to access this route`
+                error: `User type ${req.user.userType} is not authorized to access this route`
             });
         }
         next();
